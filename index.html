@@ -59,7 +59,7 @@ button.g{background:var(--card);color:var(--fg);border:1px solid var(--line)}
 </div>
 
 <div id="play" style="display:none">
-  <div class="pane" style="padding-bottom:0"><div class="row" style="margin:0"><button id="re">🎲 Acak ulang</button><button class="g" id="ed">✏️ Edit peserta</button></div><p class="s">Tap nama pemenang di tiap laga. Tap lagi untuk batal.</p></div>
+  <div class="pane" style="padding-bottom:0"><div class="row" style="margin:0"><button id="re">🎲 Acak ulang</button><button class="g" id="ed">✏️ Edit peserta</button><button class="g" id="mu">🔊</button></div><p class="s">Tap nama pemenang di tiap laga. Tap lagi untuk batal.</p></div>
   <div class="wrap"><div class="b" id="b"></div></div>
 </div>
 
@@ -129,11 +129,16 @@ function draw(){
   $("sub").textContent=f.w?"Juara: "+f.w+" 🏆":"Tap pemenang tiap laga untuk lanjut ke babak berikutnya";
 }
 function show(){$("setup").style.display="none";$("play").style.display="block"}
-function champ(n){$("wn").textContent=n;$("ov").classList.add("on");conf();let k=0;clearInterval(champ.t);champ.t=setInterval(()=>{spark(innerWidth*(.15+Math.random()*.7),innerHeight*(.12+Math.random()*.4),80,9);if(++k>40)clearInterval(champ.t)},450)}
+function champ(n){$("wn").textContent=n;$("ov").classList.add("on");conf();sfxChamp();let k=0;clearInterval(champ.t);champ.t=setInterval(()=>{sfxPop();spark(innerWidth*(.15+Math.random()*.7),innerHeight*(.12+Math.random()*.4),80,9);if(++k>40)clearInterval(champ.t)},450)}
+let AC=null,MU=false;
+function tone(f,t,d,ty,v){if(MU)return;try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),g=AC.createGain(),s=AC.currentTime+t;o.type=ty||"triangle";o.frequency.value=f;g.gain.setValueAtTime(0,s);g.gain.linearRampToValueAtTime(v||.2,s+.02);g.gain.exponentialRampToValueAtTime(.001,s+d);o.connect(g);g.connect(AC.destination);o.start(s);o.stop(s+d+.05)}catch(e){}}
+function sfxWin(){[523,659,784].forEach((f,i)=>tone(f,i*.09,.25))}
+function sfxChamp(){[523,659,784,1047,784,1047,1319].forEach((f,i)=>tone(f,i*.16,.5,"square",.12));[1047,1319,1568].forEach(f=>tone(f,1.2,1.4,"triangle",.18))}
+function sfxPop(){tone(120+Math.random()*80,0,.2,"sine",.25);tone(900+Math.random()*600,.03,.12,"square",.05)}
 let sp=[],sr=null;
 function spark(x,y,n,pw){const cs=["#f43f5e","#facc15","#22c55e","#38bdf8","#a78bfa","#fb923c"];for(let i=0;i<n;i++){const a=Math.random()*6.28,v=2+Math.random()*(pw||5);sp.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-2,l:1,c:cs[Math.random()*6|0],s:3+Math.random()*3})}if(!sr)sr=requestAnimationFrame(fxl)}
 function fxl(){const cv=$("fx"),x=cv.getContext("2d");if(cv.width!=innerWidth){cv.width=innerWidth;cv.height=innerHeight}x.clearRect(0,0,cv.width,cv.height);sp=sp.filter(p=>p.l>0);sp.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.12;p.l-=.018;x.globalAlpha=Math.max(p.l,0);x.fillStyle=p.c;x.fillRect(p.x,p.y,p.s,p.s)});x.globalAlpha=1;sr=sp.length?requestAnimationFrame(fxl):null}
-function hit(){const b=document.querySelector(".p.w.pop"),t=$("ts");t.textContent="⚡ "+LW.p+" menang"+(LW.o?" lawan "+LW.o:"")+"!";t.classList.add("on");clearTimeout(hit.t);hit.t=setTimeout(()=>t.classList.remove("on"),2200);if(b){const q=b.getBoundingClientRect();spark(q.left+q.width/2,q.top+q.height/2,45)}}
+function hit(){sfxWin();const b=document.querySelector(".p.w.pop"),t=$("ts");t.textContent="⚡ "+LW.p+" menang"+(LW.o?" lawan "+LW.o:"")+"!";t.classList.add("on");clearTimeout(hit.t);hit.t=setTimeout(()=>t.classList.remove("on"),2200);if(b){const q=b.getBoundingClientRect();spark(q.left+q.width/2,q.top+q.height/2,45)}}
 let raf;
 function conf(){
   const cv=$("cv"),x=cv.getContext("2d");cv.width=innerWidth;cv.height=innerHeight;
@@ -148,6 +153,7 @@ function conf(){
   })();
 }
 $("cl").onclick=()=>{$("ov").classList.remove("on");cancelAnimationFrame(raf);clearInterval(champ.t)};
+$("mu").onclick=()=>{MU=!MU;$("mu").textContent=MU?"🔇":"🔊"};
 $("add").onclick=()=>{const v=$("one").value.trim();if(!v)return;const t=$("names");t.value=(t.value.trim()?t.value.trim()+"\n":"")+v;$("one").value="";cnt();sv()};
 $("one").onkeydown=e=>{if(e.key==="Enter")$("add").onclick()};
 $("names").oninput=()=>{cnt();sv()};
